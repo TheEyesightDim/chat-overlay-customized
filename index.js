@@ -1,8 +1,10 @@
 const socket = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
 let messages = [],
     emotes = [],
+    userCache = {},
     maxMessages,
     ignoredUsers,
+    vettedUsers,
     badges,
     bttv,
     ffz;
@@ -15,10 +17,39 @@ fetch('config.json')
         badges = cfg.badges;
         bttv = cfg.bttv;
         ffz = cfg.ffz;
+        vettedUsers = cfg.vettedUsers;
     });
 
 function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function parseRGB(str) {
+    let s = str;
+    if (s.startsWith("#"))
+        s = s.slice(1);
+    let i = parseInt(s, 16);
+    return [(i >> 16) & 255, (i >> 8) & 255, i & 255];
+}
+
+function RGBtoHSL(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    const l = Math.max(r, g, b);
+    const s = l - Math.min(r, g, b);
+    const h = s
+        ? l === r
+            ? (g - b) / s
+            : l === g
+                ? 2 + (b - r) / s
+                : 4 + (r - g) / s
+        : 0;
+    return [
+        60 * h < 0 ? 60 * h + 360 : 60 * h,
+        100 * (s ? (l <= 0.5 ? s / (2 * l - s) : s / (2 - (2 * l - s))) : 0),
+        (100 * (2 * l - s)) / 2,
+    ];
 }
 
 function processEmotes(tags, message) {
@@ -28,7 +59,8 @@ function processEmotes(tags, message) {
         toReplace = [],
         regex,
         emote;
-    if (tags.emotes) {
+    if (tags.emotes)
+    {
         let emotes = {};
         tags.emotes.split('/').forEach(x => {
             x = x.split(':');
@@ -42,13 +74,16 @@ function processEmotes(tags, message) {
             totalCount += emotes[x].length;
             toReplace.push({
                 'regex': regex,
-                'src': `http://static-cdn.jtvnw.net/emoticons/v1/${x}/3.0`
+                // 'src': `http://static-cdn.jtvnw.net/emoticons/v1/${x}/3.0`
+                'src': `https://static-cdn.jtvnw.net/emoticons/v2/${x}/default/dark/3.0`
             });
         });
     }
-    if (emotes.length) {
+    if (emotes.length)
+    {
         let count;
-        for (j = 0; j < emotes.length; j++) {
+        for (j = 0; j < emotes.length; j++)
+        {
             emote = emotes[j].name;
             emote = escapeRegExp(emote);
             regex = new RegExp(`${emote}\\s\|\\s${emote}\\s\|\\s${emote}\$`, 'g');
@@ -61,7 +96,8 @@ function processEmotes(tags, message) {
             });
         }
     }
-    if (toReplace.length) {
+    if (toReplace.length)
+    {
         if (((bttv || ffz) && message.split(' ').length === totalCount) || tags['emote-only'] === '1') id = 'emoteonly';
         toReplace.forEach(x => newmsg = newmsg.replace(x.regex, ` <img id="${id}" alt="" src="${x.src}"> `));
     }
@@ -71,11 +107,13 @@ function processEmotes(tags, message) {
 async function fetchFFZEmotes(data) {
     let response = await fetch(`https://api.frankerfacez.com/v1/room/${data['channel']}`);
     let json = await response.json();
-    try {
+    try
+    {
         let set = json.room.set;
         let ffz = json.sets[`${set}`].emoticons;
-        ffz.forEach(x => emotes.push({'name': x.name, 'url': x.urls[4]}));
-    } catch (e) {
+        ffz.forEach(x => emotes.push({ 'name': x.name, 'url': x.urls[4] }));
+    } catch (e)
+    {
         console.log('unable to fetch ffz emotes');
     }
 }
@@ -84,8 +122,10 @@ async function fetchBttvEmotes(data) {
     let channel_id = data['channel_id'];
     let channel = data['channel'];
     let auth = data['twitch_bot_token'];
-    if (channel_id === undefined) {
-        if (data['client_id'] === undefined) {
+    if (channel_id === undefined)
+    {
+        if (data['client_id'] === undefined)
+        {
             console.log('unable to fetch bttv emotes, put channel/client id into tokens.json');
             return;
         }
@@ -97,7 +137,8 @@ async function fetchBttvEmotes(data) {
         });
         let json = await response.json();
         json = json['data'][0];
-        if (json === undefined) {
+        if (json === undefined)
+        {
             console.log('unable to fetch channel id');
             return;
         }
@@ -107,22 +148,26 @@ async function fetchBttvEmotes(data) {
     let bttv = [];
     let response;
     let json;
-    try {
+    try
+    {
         response = await fetch(`https://api.betterttv.net/3/cached/users/twitch/${channel_id}`);
         json = await response.json();
         bttv = json['channelEmotes'].concat(json['sharedEmotes']);
-    } catch (e) {
+    } catch (e)
+    {
         console.log('unable to fetch bttv channel emotes');
     }
-    try {
+    try
+    {
         response = await fetch('https://api.betterttv.net/3/cached/emotes/global');
         json = await response.json();
         if (!Array.isArray(json)) throw e;
         bttv = bttv.concat(json);
-    } catch (e) {
+    } catch (e)
+    {
         console.log('unable to fetch bttv global emotes');
     }
-    bttv.forEach(x => emotes.push({'name': x.code, 'url': `https://cdn.betterttv.net/emote/${x.id}/3x`}));
+    bttv.forEach(x => emotes.push({ 'name': x.code, 'url': `https://cdn.betterttv.net/emote/${x.id}/3x` }));
 }
 
 async function main() {
@@ -140,7 +185,7 @@ async function main() {
         socket.send(`NICK ${channel}`);
         socket.send(`JOIN #${channel}`);
         socket.send('CAP REQ :twitch.tv/tags');
-    }
+    };
 
     socket.onmessage = async function (event) {
         console.log(event.data);
@@ -149,31 +194,63 @@ async function main() {
         if (!username) return;
         username = username[1];
         if (ignoredUsers.includes(username.toLowerCase())) return;
+
+        //add user's profile image URL to cache
+        if (userCache[username] === undefined)
+        {
+            let opt = {
+                headers: {
+                    'Client-ID': data['client_id'],
+                    'Authorization': `Bearer ${data["api_oauth"]}`
+                }
+            };
+            let res = await fetch(`https://api.twitch.tv/helix/users?login=${username}`, opt);
+            let struct = await res.json();
+            console.log(struct);
+            let imgURI = struct['data'][0]['profile_image_url'] ?? 'static/gogo.png';
+            userCache[username] = imgURI;
+        }
         let color = /color=(#[A-Fa-f0-9]{6})/.exec(event.data);
-        if (color !== null) color = color[1]
+        if (color !== null) color = color[1];
         else color = '#aabbcc';
         let message = event.data.replace(chat_msg, "");
-        if (messages.length >= maxMessages) {
+        if (messages.length >= maxMessages)
+        {
             let first = messages.shift();
             first.addEventListener('animationend', () => first.parentNode.removeChild(first));
             first.style.animation = 'fade-out 0.2s forwards';
         }
-        let chatmsg = document.createElement('div');
+
         let tags = {};
         event.data.split(';').forEach(x => {
             x = x.split('=');
             tags[x[0]] = x[1];
         });
-        if (badges && tags.badges) {
+
+        //replace things that look like HTML, 
+        //-before- processing it for emotes (which insert HTML) 
+        message = message.replace(/<\/?.+>|&lt;|&gt;|&#\d+;/gim, "🈲");
+
+        let chatmsg = document.createElement('div');
+
+        if (badges && tags.badges)
+        {
             tags.badges = tags.badges.split(',').map(x => x.split('/'));
-            tags.badges.forEach(x => chatmsg.innerHTML += `<img id="badge" alt="" src="static/${x[0]}${x[1]}.png">`);
+            tags.badges.forEach(x => chatmsg.innerHTML += `<img id="badge" src="static/${x[0]}${x[1]}.png">`);
         }
         message = processEmotes(tags, message);
+        let hsl = RGBtoHSL(...parseRGB(color));
+        chatmsg.style.setProperty("--user-h", hsl[0]);
+        chatmsg.style.setProperty("--user-s", hsl[1] + "%");
+        chatmsg.style.setProperty("--user-l", hsl[2] + "%");
         chatmsg.id = 'chatmsg';
-        chatmsg.innerHTML += `<span style=color:${color}>${username}</span> ${message}`;
+
+        let img = `<img class="profile" src=${userCache[username]}>`;
+        let name = `<span class="uname" style=color:${color}>${username}</span>`;
+        chatmsg.innerHTML += `<div class="upper-part">${img} ${name}</div><hr><div class="writer">${message}</div>`;
         document.querySelector('#chatmsgs').appendChild(chatmsg);
         messages.push(chatmsg);
-    }
+    };
 }
 
 main();

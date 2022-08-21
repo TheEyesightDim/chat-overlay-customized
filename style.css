@@ -2,29 +2,68 @@ body {
     margin: 0;
     overflow: hidden;
     box-sizing: border-box;
+    font-family: 'Pixolde', 'Unifont', monospace;
+}
+
+.profile {
+    max-height: 80px;
+    object-fit: contain;
+    display: inline;
+    margin-right: 10px;
+    border-radius: 15%;
+    vertical-align: middle;
+}
+
+hr {
+    margin: 4px;
+}
+
+.upper-part {
+    word-break: keep-all;
+    max-width: 100%;
+    font-size: 28pt;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: normal;
+    margin-bottom: 2px;
 }
 
 #chatmsg {
-    width: 100%;
+    width: calc(100% - 40px);
     color: white;
-    margin-top: 12px;
+    --user-color: hsl(var(--user-h, 0), var(--user-s, 100), calc(var(--user-l, 50)));
+    --user-color-dim: hsla(var(--user-h, 0), var(--user-s, 100), calc(var(--user-l, 50)), 0.4);
+    --user-color-shift: hsla(calc(var(--user-h, 0) + 60), var(--user-s, 100), calc(var(--user-l, 50)), 0.4);
+    background: linear-gradient(-60deg, var(--user-color-dim), var(--user-color-shift));
+    padding: 9px;
+    margin-bottom: 6px;
     overflow-wrap: break-word;
-    font-family: 'Ubuntu Mono', monospace;
-    text-shadow: 1px 1px 2px black;
-    font-size: 16pt;
-    transition: margin-top 0.2s;
-    animation: fade-in 0.25s;
+    text-shadow: 2px 2px 2px black;
+    font-size: 24pt;
+    animation: fade-in 0.6s;
+    border: 6px groove rgba(255, 255, 255, 0.61);
+    border-radius: 8px;
 }
 
-#chatmsg:first-child {
-    margin-top: -20px;
+#chatmsg:last-child {
+    scroll-snap-align: start end;
+    margin-bottom: 20px;
 }
 
 #chatmsgs {
-    width: 430px;
+    width: 100%;
+    height: 100vh;
     position: relative;
-    padding-top: 40px;
-    transition: padding-top 0.2s;
+    padding: 20px 0px 20px 0px;
+    scroll-snap-type: y mandatory;
+    overflow-y: scroll;
+    scroll-behavior: smooth;
+}
+
+#chatmsgs::-webkit-scrollbar {
+    display: none;
 }
 
 #chatmsgs:empty {
@@ -43,7 +82,7 @@ body {
 }
 
 #emoteonly {
-    height: 2em;
+    height: 1.6em;
     vertical-align: middle;
 }
 

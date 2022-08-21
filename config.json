@@ -1,7 +1,16 @@
 {
     "maxMessages": 10,
-    "ignoredUsers": ["shtcd"],
-    "badges": true,
+    "ignoredUsers": [
+        "shtcd"
+    ],
+    "badges": false,
     "bttv": true,
-    "ffz": true
+    "ffz": true,
+    "vettedUsers": [
+        "orthogonality",
+        "matrixtransform",
+        "saralene",
+        "tshmireille",
+        "rotomola"
+    ]
 }
