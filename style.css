@@ -30,7 +30,7 @@ hr {
     margin-bottom: 2px;
 }
 
-#chatmsg {
+.chatmsg {
     width: calc(100% - 40px);
     color: white;
     --user-color: hsl(var(--user-h, 0), var(--user-s, 100), calc(var(--user-l, 50)));
@@ -47,7 +47,7 @@ hr {
     border-radius: 8px;
 }
 
-#chatmsg:last-child {
+.chatmsg:last-child {
     scroll-snap-align: start end;
     margin-bottom: 20px;
 }
@@ -70,18 +70,18 @@ hr {
     padding-top: 0px;
 }
 
-#badge {
+.badge {
     height: 1em;
     vertical-align: middle;
     margin-right: 8px;
 }
 
-#emote {
+.emote {
     height: 1.2em;
     vertical-align: middle;
 }
 
-#emoteonly {
+.emoteonly {
     height: 1.6em;
     vertical-align: middle;
 }

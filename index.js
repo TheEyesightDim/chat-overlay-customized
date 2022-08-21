@@ -54,7 +54,7 @@ function RGBtoHSL(r, g, b) {
 
 function processEmotes(tags, message) {
     let newmsg = message,
-        id = 'emote',
+        cls = 'emote',
         totalCount = 0,
         toReplace = [],
         regex,
@@ -74,7 +74,7 @@ function processEmotes(tags, message) {
             totalCount += emotes[x].length;
             toReplace.push({
                 'regex': regex,
-                // 'src': `http://static-cdn.jtvnw.net/emoticons/v1/${x}/3.0`
+                // 'src': `http://static-cdn.jtvnw.net/emoticons/v1/${x}/3.0` // deprecated in favor of new animated emotes
                 'src': `https://static-cdn.jtvnw.net/emoticons/v2/${x}/default/dark/3.0`
             });
         });
@@ -98,8 +98,11 @@ function processEmotes(tags, message) {
     }
     if (toReplace.length)
     {
-        if (((bttv || ffz) && message.split(' ').length === totalCount) || tags['emote-only'] === '1') id = 'emoteonly';
-        toReplace.forEach(x => newmsg = newmsg.replace(x.regex, ` <img id="${id}" alt="" src="${x.src}"> `));
+        if (((bttv || ffz) && message.split(' ').length === totalCount) || tags['emote-only'] === '1')
+        {
+            cls = 'emoteonly';
+        }
+        toReplace.forEach(x => newmsg = newmsg.replace(x.regex, ` <img class="${cls}" src="${x.src}"> `));
     }
     return newmsg;
 }
@@ -236,14 +239,14 @@ async function main() {
         if (badges && tags.badges)
         {
             tags.badges = tags.badges.split(',').map(x => x.split('/'));
-            tags.badges.forEach(x => chatmsg.innerHTML += `<img id="badge" src="static/${x[0]}${x[1]}.png">`);
+            tags.badges.forEach(x => chatmsg.innerHTML += `<img class="badge" src="static/${x[0]}${x[1]}.png">`);
         }
         message = processEmotes(tags, message);
         let hsl = RGBtoHSL(...parseRGB(color));
         chatmsg.style.setProperty("--user-h", hsl[0]);
         chatmsg.style.setProperty("--user-s", hsl[1] + "%");
         chatmsg.style.setProperty("--user-l", hsl[2] + "%");
-        chatmsg.id = 'chatmsg';
+        chatmsg.className = 'chatmsg';
 
         let img = `<img class="profile" src=${userCache[username]}>`;
         let name = `<span class="uname" style=color:${color}>${username}</span>`;
