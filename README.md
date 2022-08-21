@@ -6,18 +6,18 @@ simple on-screen twitch chat, supports twitch badges, bttv, ffz and twitch emote
 
 ## Install
 
-### tokens
+### `tokens.json`
 
-create `tokens.json`, attributes: channel, twitch_bot_token, channel_id (or client_id)  
+create `tokens.json` with the following attributes:
 
-`channel` - Twitch username in lower case  
-`twitch_bot_token` - OAuth token acting as Twitch chat password, obtain with [twitchapps](https://twitchapps.com/tmi/).
-`api_oauth` - OAuth app [access token](https://dev.twitch.tv/docs/authentication#app-access-tokens) for interacting with the Twitch API using [client credentials grant flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#client-credentials-grant-flow).
-]
-for bttv emotes:  
+- `channel` - Twitch username in lower case.
+- `twitch_bot_token` - OAuth token acting as Twitch chat password, obtain with [twitchapps](https://twitchapps.com/tmi/).
+- `api_oauth` - OAuth app [access token](https://dev.twitch.tv/docs/authentication#app-access-tokens) for interacting with the Twitch API using [client credentials grant flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#client-credentials-grant-flow).
 
-`channel_id` - if omitted, obtained automatically using `client_id`  
-`client_id` - Twitch application client id, create app in [twitch dev console](https://dev.twitch.tv/console/apps)  
+Additionally, for bttv emotes:  
+
+- `channel_id` - if omitted, obtained automatically using `client_id`.
+- `client_id` - Twitch application client id, create app in [twitch dev console](https://dev.twitch.tv/console/apps)  
 
 ### server
 
