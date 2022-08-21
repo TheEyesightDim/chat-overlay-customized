@@ -4,7 +4,6 @@ let messages = [],
     userCache = {},
     maxMessages,
     ignoredUsers,
-    vettedUsers,
     badges,
     bttv,
     ffz;
@@ -17,7 +16,6 @@ fetch('config.json')
         badges = cfg.badges;
         bttv = cfg.bttv;
         ffz = cfg.ffz;
-        vettedUsers = cfg.vettedUsers;
     });
 
 function escapeRegExp(string) {
