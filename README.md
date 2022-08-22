@@ -2,6 +2,9 @@
 
 simple on-screen twitch chat, supports twitch badges, bttv, ffz and twitch emotes  
 
+## Preview
+
+https://user-images.githubusercontent.com/9030935/185836373-7b291cdd-d6e3-4fe6-8b06-ffa6eaa14fba.mp4
 
 
 ## Install
@@ -29,10 +32,14 @@ Node.js http-server:
     cd chat-overlay
     http-server
 
-### config.json
+### `config.json`
 
-`maxMessages` (integer): max number of messages on screen at once  
-`ignoredUsers` (array of strings): twitch usernames in lower case, ignored user's messages not displayed  
-`badges` (boolean): show badges?  
-`bttv` (boolean): fetch and display bttv emotes?  
-`ffz` (boolean): fetch and display ffz emotes?  
+- `maxMessages` (integer): max number of messages on screen at once  
+- `ignoredUsers` (array of strings): twitch usernames in lower case, ignored user's messages not displayed  
+- `badges` (boolean): show badges?  
+- `bttv` (boolean): fetch and display bttv emotes?  
+- `ffz` (boolean): fetch and display ffz emotes?
+- `use_typewriter` (boolean): Display messages with typewriter effect?
+- `print_rate` (integer): Number of characters per second to display with the typewriter effect. It has no effect if `use_typewriter === false`.
+- `sentinel_char` (string): A sentinel character used internally for inserting GIFs with the typewriter effect. Not recommended to change.
+- `bad_text_char` (string): A character or string to replace any HTML in users' chat messages.
