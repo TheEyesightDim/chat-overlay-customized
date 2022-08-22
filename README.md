@@ -24,15 +24,23 @@ Additionally, for bttv emotes:
 - `channel_id` - if omitted, obtained automatically using `client_id`.
 - `client_id` - Twitch application client id, create app in [twitch dev console](https://dev.twitch.tv/console/apps)  
 
-### server
+### Run The Server
 
-run server, add browser source in obs  
+Serve the root of the repository, and add the address as a browser source in OBS, e.g. `http://localhost:8080`.
 
-Node.js http-server:  
-
+#### Node.js `http-server`:  
+Install the `http-server` module globally if you haven't already:
+    
     npm install http-server -g
+        
+Then serve the directory.   
+    
     cd chat-overlay
     http-server
+    
+Python 3 `http.server` module:
+
+    python -m http.server 8080
 
 ### `config.json`
 
