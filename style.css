@@ -5,6 +5,10 @@ body {
     font-family: 'Pixolde', 'Unifont', monospace;
 }
 
+hr {
+    margin: 4px;
+}
+
 .profile {
     max-height: 80px;
     object-fit: contain;
@@ -12,10 +16,6 @@ body {
     margin-right: 10px;
     border-radius: 15%;
     vertical-align: middle;
-}
-
-hr {
-    margin: 4px;
 }
 
 .upper-part {
@@ -50,6 +50,11 @@ hr {
 .chatmsg:last-child {
     scroll-snap-align: start end;
     margin-bottom: 20px;
+}
+
+.invisible {
+    color: transparent;
+    text-shadow: none;
 }
 
 #chatmsgs {

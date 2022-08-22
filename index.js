@@ -1,4 +1,5 @@
 const socket = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+
 let messages = [],
     emotes = [],
     userCache = {},
@@ -6,7 +7,33 @@ let messages = [],
     ignoredUsers,
     badges,
     bttv,
-    ffz;
+    ffz,
+    use_typewriter,
+    print_rate,
+    sentinel_char, //We're agreeing that this won't show up in normal chat. Ok?
+    bad_text_char;
+
+class MsgData {
+    constructor(node, msg) {
+        this.node = node;
+        this.visible_node = node.querySelector(".visible");
+        this.invisible_node = node.querySelector(".invisible");
+
+        if (use_typewriter)
+        {
+            this.images = getImgNodes(msg);
+            this.done = false;
+            this.visible_text = "";
+            this.invisible_text = replaceImgWithSentinel(msg);
+        }
+        else
+        {
+            this.visible_text = msg;
+            this.invisible_text = "";
+            this.done = true;
+        }
+    }
+}
 
 fetch('config.json')
     .then(r => r.json())
@@ -16,6 +43,10 @@ fetch('config.json')
         badges = cfg.badges;
         bttv = cfg.bttv;
         ffz = cfg.ffz;
+        use_typewriter = cfg.use_typewriter;
+        print_rate = cfg.print_rate;
+        sentinel_char = cfg.sentinel_char;
+        bad_text_char = cfg.bad_text_char;
     });
 
 function escapeRegExp(string) {
@@ -48,6 +79,35 @@ function RGBtoHSL(r, g, b) {
         100 * (s ? (l <= 0.5 ? s / (2 * l - s) : s / (2 - (2 * l - s))) : 0),
         (100 * (2 * l - s)) / 2,
     ];
+}
+
+function applyTypewriter() {
+    messages
+        .filter(msg => !msg.done)
+        .forEach(msg => {
+            let popped = msg.invisible_text.slice(0, 1);
+            if (popped === sentinel_char)
+            {
+                popped = msg.images.shift();
+            }
+            msg.visible_text += popped;
+            msg.invisible_text = msg.invisible_text.slice(1);
+            if (msg.invisible_text === "")
+            {
+                msg.done = true;
+            }
+            msg.visible_node.innerHTML = msg.visible_text;
+            msg.invisible_node.innerHTML = msg.invisible_text;
+        });
+}
+
+function getImgNodes(str) {
+    let tags = [...(str.match(/<img .*>/g) ?? [])];
+    return tags;
+}
+
+function replaceImgWithSentinel(str) {
+    return str.replaceAll(/<img .*>/g, sentinel_char);
 }
 
 function processEmotes(tags, message) {
@@ -173,13 +233,21 @@ async function fetchBttvEmotes(data) {
 
 async function main() {
 
-    let chat_msg = /^@.*:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :/,
+    let chat_msg_regex = /^@.*:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :/,
         data = await fetch('tokens.json').then(res => res.json()),
         password = `oauth:${data['twitch_bot_token']}`,
         channel = data['channel'];
 
     if (bttv) fetchBttvEmotes(data);
     if (ffz) fetchFFZEmotes(data);
+
+    //interval callback to handle typewriter printing
+    if (use_typewriter)
+    {
+        setInterval(
+            applyTypewriter,
+            1000 / print_rate);
+    }
 
     socket.onopen = () => {
         socket.send(`PASS ${password}`);
@@ -214,10 +282,11 @@ async function main() {
         let color = /color=(#[A-Fa-f0-9]{6})/.exec(event.data);
         if (color !== null) color = color[1];
         else color = '#aabbcc';
-        let message = event.data.replace(chat_msg, "");
+
+        let message = event.data.replace(chat_msg_regex, "");
         if (messages.length >= maxMessages)
         {
-            let first = messages.shift();
+            let first = messages.shift().node;
             first.addEventListener('animationend', () => first.parentNode.removeChild(first));
             first.style.animation = 'fade-out 0.2s forwards';
         }
@@ -230,16 +299,18 @@ async function main() {
 
         //replace things that look like HTML, 
         //-before- processing it for emotes (which insert HTML) 
-        message = message.replace(/<\/?.+>|&lt;|&gt;|&#\d+;/gim, "🈲");
+        message = message.replace(/<\/?.+>|&lt;|&gt;|&#\d+;/gim, bad_text_char);
 
         let chatmsg = document.createElement('div');
 
         if (badges && tags.badges)
         {
             tags.badges = tags.badges.split(',').map(x => x.split('/'));
-            tags.badges.forEach(x => chatmsg.innerHTML += `<img class="badge" src="static/${x[0]}${x[1]}.png">`);
+            tags.badges.forEach(x => chatmsg.insertAdjacentHTML("beforeend", `<img class="badge" src="static/${x[0]}${x[1]}.png">`));
         }
+
         message = processEmotes(tags, message);
+
         let hsl = RGBtoHSL(...parseRGB(color));
         chatmsg.style.setProperty("--user-h", hsl[0]);
         chatmsg.style.setProperty("--user-s", hsl[1] + "%");
@@ -248,9 +319,17 @@ async function main() {
 
         let img = `<img class="profile" src=${userCache[username]}>`;
         let name = `<span class="uname" style=color:${color}>${username}</span>`;
-        chatmsg.innerHTML += `<div class="upper-part">${img} ${name}</div><hr><div class="writer">${message}</div>`;
+        chatmsg.insertAdjacentHTML("beforeend",
+            `<div class="upper-part">${img} ${name}</div>
+            <hr>
+            <div class="writer">
+            <span class="visible">${use_typewriter ? message : ""}</span>
+            <span class="invisible"></span>
+            </div>`);
+
+        msg_struct = new MsgData(chatmsg, message);
         document.querySelector('#chatmsgs').appendChild(chatmsg);
-        messages.push(chatmsg);
+        messages.push(msg_struct);
     };
 }
 

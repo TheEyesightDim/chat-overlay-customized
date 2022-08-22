@@ -5,5 +5,9 @@
     ],
     "badges": false,
     "bttv": true,
-    "ffz": true
+    "ffz": true,
+    "use_typewriter": false,
+    "print_rate": 30,
+    "sentinel_char": "⸎",
+    "bad_text_char": "🈲"
 }
