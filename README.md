@@ -1,6 +1,8 @@
 # chat-overlay
 
-simple on-screen twitch chat, supports twitch badges, bttv, ffz and twitch emotes  
+Simple on-screen twitch chat, supports twitch badges, bttv, ffz and twitch emotes.
+
+Forked from Ciremun's [chat-overlay](https://github.com/Ciremun/chat-overlay) with support for Twitch's new animated emotes and typewriter effect for chat messages.
 
 ## Preview
 
